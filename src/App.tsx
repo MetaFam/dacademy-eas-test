@@ -1,10 +1,27 @@
 import { useState } from 'react'
-import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
-import { ethers } from 'ethers';
-import { Core } from '@walletconnect/core'
-import { WalletKit, WalletKitTypes } from '@reown/walletkit'
-import { buildApprovedNamespaces, getSdkError } from '@walletconnect/utils'
+import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk"
+import { BrowserProvider } from 'ethers'
+import type { WalletClient } from 'viem'
+import { type Config, useWalletClient, useAccount } from 'wagmi'
 import './App.css'
+
+
+export function walletClientToSigner(walletClient: WalletClient) {
+  const { account, chain, transport } = walletClient
+
+  if(!chain) throw new Error('Chain is not defined!')
+  if(!account) throw new Error('Account is not defined!')
+
+  const network = {
+    chainId: chain.id,
+    name: chain.name,
+    ensAddress: chain.contracts?.ensRegistry?.address
+  };
+  const provider = new BrowserProvider(transport, network);
+  const signer = provider.getSigner(account.address);
+
+  return signer;
+}
 
 const easContractAddress = '0x4200000000000000000000000000000000000021'
 const schemaUID = {
@@ -12,76 +29,28 @@ const schemaUID = {
   quest: '0x46f59b4641989de0dfe7c6bfdf4426e7b3d630e261d9e27fa8b77fafce6e75ec',
 }
 
+
 function App() {
+  const { isConnected } = useAccount()
+  const { data: client } = useWalletClient()
   const [statuses, addStatuses] = useState<Array<string>>([])
 
   const addStatus = (status: string) => {
     addStatuses((statuses) => ([...statuses, status]))
   }
 
-  const connect = async () => {
-    const core = new Core({
-      projectId: import.meta.env.VITE_REOWN_PROJECT_ID
-    })
-
-    const walletKit = await WalletKit.init({
-      core,
-      metadata: {
-        name: 'Quest Chains EAS Test',
-        description: 'Testing creating attestations for Quest Chains.',
-        url: 'https://localhost:5173',
-        icons: []
-      }
-    })
-
-    const onSessionProposal = async (
-      { id, params }: WalletKitTypes.SessionProposal
-    ) => {
-      try {
-        const approvedNamespaces = buildApprovedNamespaces({
-          proposal: params,
-          supportedNamespaces: {
-            eip155: {
-              chains: ['eip155:11155420'],
-              methods: ['eth_sendTransaction', 'personal_sign'],
-              events: ['accountsChanged', 'chainChanged'],
-              accounts: [
-                'eip155:11155420:0xeb4e3e9fa819e69e5df4ea35b9c7973062c96de9',
-              ],
-            },
-          },
-        })
-        // ------- end namespaces builder util ------------ //
-    
-        const session = await walletKit.approveSession({
-          id, namespaces: approvedNamespaces,
-        })
-      } catch(error) {
-        addStatus(`Error: ${(error as Error).message}`)
-
-        await walletKit.rejectSession({
-          id, reason: getSdkError('USER_REJECTED'),
-        })
-      }
-    }
-
-    walletKit.on('session_proposal', onSessionProposal)
-  }
-
-
-walletKit.on('session_proposal', onSessionProposal)
-  }
-
   const attest = async () => {
     try {
+      if(!client) throw new Error('Client doesn’t exist!')
+
       addStatus('Beginning Attestation Process')
 
-      const provider = ethers.getDefaultProvider('optimism-sepolia')
+      const signer = await walletClientToSigner(client)
 
       addStatus(`Connecting to EAS Contract: ${easContractAddress}`)
 
       const eas = new EAS(easContractAddress)
-      eas.connect(provider)
+      eas.connect(signer)
 
       addStatus('Encoding Data')
 
@@ -150,15 +119,22 @@ walletKit.on('session_proposal', onSessionProposal)
   }
 
   return (
-    <main>
-      <h1>Create A EAS Playbook Completion</h1>
-      <button onClick={attest}>Start Attestations</button>
-      <ol>
-        {statuses.map((status, index) => (
-          <li key={index}>{status}</li>
-        ))}
-      </ol>
-    </main>
+    <section>
+      <header>
+        <w3m-button/>
+      </header>
+      <main>
+        <h1>Create A EAS Playbook Completion</h1>
+        {isConnected && (
+          <button onClick={attest}>Start Attestations</button>
+        )}
+        <ol>
+          {statuses.map((status, index) => (
+            <li key={index}>{status}</li>
+          ))}
+        </ol>
+      </main>
+    </section>
   )
 }
 
