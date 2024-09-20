@@ -3,6 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "contributors": [
+    {
+      "name": "dysbulic",
+      "email": "dys@dhappy.org"
+    },
+    { "name": "Omka" }
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
