@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gh:publish": "gh-pages -d dist/ -m 'Deploying!'"
   },
   "dependencies": {
     "@ethereum-attestation-service/eas-sdk": "^2.6.0",
@@ -16,6 +17,7 @@
     "@walletconnect/core": "^2.16.2",
     "@walletconnect/utils": "^2.16.2",
     "@web3modal/wagmi": "^5.1.9",
+    "gh-pages": "^6.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "viem": "^2.21.10",

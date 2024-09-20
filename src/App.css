@@ -47,3 +47,8 @@ button {
 button:hover {
   background-color: #04972c;
 }
+
+li {
+  max-width: 90vw;
+  overflow-x: scroll;
+}

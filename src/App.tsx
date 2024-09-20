@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk"
 import { BrowserProvider } from 'ethers'
 import type { WalletClient } from 'viem'
-import { type Config, useWalletClient, useAccount } from 'wagmi'
+import { useWalletClient, useAccount } from 'wagmi'
 import './App.css'
 
 
@@ -114,6 +114,7 @@ function App() {
 
       addStatus(`Quest Attestation UID: ${questAttestationUID}`)
     } catch(err) {
+      console.error({ err })
       addStatus(`Error: ${(err as Error).message}`)
     }
   }
