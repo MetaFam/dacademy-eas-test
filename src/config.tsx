@@ -16,7 +16,6 @@ const metadata = {
 const chains = [optimismSepolia] as const
 export const config = defaultWagmiConfig({
   chains,
-  projectId,
   metadata,
   auth: {
     email: true,
